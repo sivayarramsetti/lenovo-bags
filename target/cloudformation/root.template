@@ -1,0 +1,45 @@
+# TODO preamble
+Resources:
+
+  # TODO more explanation here, including "DO NOT DELETE THIS"
+  # This role is used by the lambda defined in ApiStack. Its permissions are defined by LambdaPolicy below
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      # This is required for creating a lambda in a VPC. It can be deleted if VPC access is not required.
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+
+  # TODO more explanation here, including "DO NOT DELETE THIS"
+  # This policy needs to give the lambda code permission for the resources defined in this file
+  LambdaPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+        - !Ref LambdaRole
+      PolicyName: LambdaPolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - "logs:*"
+            Resource: "arn:aws:logs:*:*:*"
+
+  # TODO more explanation here, including "DO NOT DELETE THIS"
+  # This references the generated CloudFormation file that defines the API in API Gateway and the
+  # lambda that handles requests
+  ApiStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://s3-${AWS::Region}.amazonaws.com/bags.code/bags.template"
+      Parameters:
+        LambdaRole: !GetAtt LambdaRole.Arn
